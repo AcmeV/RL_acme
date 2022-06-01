@@ -1,0 +1,15 @@
+{
+  "tkinter": {
+    "Maze_v0": "env.Maze_v0",
+    "Maze": "env.Maze"
+  },
+  "pygame": {
+    "FlappyBird": "env.flappy_bird.FlappyBird",
+    "Snake": "env.snake.game.GameEnvironment"
+  },
+
+  "gym": {
+
+  }
+
+}
