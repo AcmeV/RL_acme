@@ -20,6 +20,7 @@ class Maze(tk.Tk, object):
         self.n_actions = len(self.action_space)
         self.n_features = 4
         self.step_counter = 0
+        self.is_render = False
         self.title('maze')
         self.geometry('{0}x{1}'.format(self.height * self.unit, self.height * self.unit))
         self._build_maze()
@@ -174,5 +175,8 @@ class Maze(tk.Tk, object):
         return s_, reward, done, self.step_counter
 
     def render(self):
-        time.sleep(0.1)
-        self.update()
+        if self.is_render:
+            time.sleep(0.1)
+            self.update()
+        else:
+            self.update()

@@ -9,7 +9,9 @@
   },
 
   "gym": {
-
+    "Pendulum": "env.gym_envs.Pendulum",
+    "MountainCar": "env.gym_envs.MountainCar",
+    "CartPole": "env.gym_envs.CartPole"
   }
 
 }

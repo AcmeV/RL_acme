@@ -15,8 +15,9 @@ class Maze_v0(tk.Tk, object):
         self.unit = unit
         self.length = length
 
-        self.step = 0
+        self.step_counter = 0
         self.action_space = ['l', 'r']
+        self.is_render = False
 
         self.n_actions = len(self.action_space)
         self.n_features = 4
@@ -60,7 +61,7 @@ class Maze_v0(tk.Tk, object):
 
     def reset(self):
         self.update()
-        self.step = 0
+        self.step_counter = 0
         # time.sleep(0.5)
         self.canvas.delete(self.rect)
         origin = np.array([20, 20])
@@ -97,10 +98,13 @@ class Maze_v0(tk.Tk, object):
         else:
             reward = 0
             done = False
-        self.step += 1
-        # time.sleep(0.15)
-        return s_, reward, done, self.step
+        self.step_counter += 1
+
+        return s_, reward, done, self.step_counter
 
     def render(self):
-        # time.sleep(0.1)
-        self.update()
+        if self.is_render:
+            time.sleep(0.1)
+            self.update()
+        else:
+            self.update()

@@ -1,5 +1,6 @@
 import argparse
 
+from utils.training.gym_train import gym_train
 from utils.training.pygame_train import pygame_train
 from utils.training.tkinter_train import tkinter_train
 
@@ -18,12 +19,15 @@ parser.add_argument('--env-type', type=str, default='tkinter',
                     choices=('tkinter', 'gym', 'pygame'))
 
 parser.add_argument('--env-name', type=str, default='Maze',
-                    choices=('Maze', 'Maze_v0', 'FlappyBird', 'Snake'))
+                    choices=('Maze', 'Maze_v0',
+                             'FlappyBird', 'Snake'
+                             'Pendulum', 'MountainCar', 'CartPole'))
+parser.add_argument('--is-render', type=int, default=1, choices=(0, 1))
 
 # Hyper-parameters
 parser.add_argument('--model', type=str, default='QLearning',
                     choices=('QLearning', 'Sarsa', 'SarsaLambda',
-                             'DQN'))
+                             'DQN', 'DoubleDQN'))
 parser.add_argument('--episodes', type=int, default=150)
 parser.add_argument('--lr', type=float, default=0.1)
 parser.add_argument('--pre-training', type=int, default=1, choices=(0, 1))
@@ -32,17 +36,21 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
 
-    args.env_type = 'pygame'
-    args.env_name = 'FlappyBird'
-    args.model = 'QLearning'
+    args.env_type = 'tkinter'
+    args.env_name = 'Maze_v0'
+    args.model = 'DQN'
 
     args.pre_training = 1
     args.if_save = 0
 
-    args.episodes = 200
+    args.is_render = 0
+
+    args.episodes = 5000
     args.lr = 0.1
 
     if args.env_type == 'tkinter':
         tkinter_train(args)
     elif args.env_type == 'pygame':
         pygame_train(args)
+    else:
+        gym_train(args)

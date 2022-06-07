@@ -1,6 +1,5 @@
 import json
 import os
-
 import env
 
 def initial_env(args):

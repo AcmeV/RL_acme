@@ -40,7 +40,8 @@ class BaseTable():
 
 	def convert2str(self, item):
 		''' Convert list or tuple input as str '''
-		if isinstance(item, list) or isinstance(item, tuple):
+		if isinstance(item, list) or isinstance(item, tuple)\
+				or isinstance(item, np.ndarray):
 			return str(item)
 		else:
 			return item

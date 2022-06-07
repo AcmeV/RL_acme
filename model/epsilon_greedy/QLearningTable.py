@@ -22,4 +22,4 @@ class QLearningTable(BaseTable):
 
 		self.table.loc[state, action] += self.lr * (q_target - q_predict)
 
-		return q_target - q_predict
+		return abs(q_predict - q_target)
