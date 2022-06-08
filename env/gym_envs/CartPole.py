@@ -35,3 +35,6 @@ class CartPole():
 
         reward = r1 + r2
         return observation_, reward, done, info
+
+    def close(self):
+        self.env.close()

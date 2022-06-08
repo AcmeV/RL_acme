@@ -10,6 +10,10 @@ class QNetwork(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(n_features, n_hiddens),
             nn.ReLU(),
+            nn.Linear(n_hiddens, n_hiddens),
+            nn.ReLU(),
+            nn.Linear(n_hiddens, n_hiddens),
+            nn.ReLU(),
             nn.Linear(n_hiddens, n_actions))
 
     def forward(self, X):

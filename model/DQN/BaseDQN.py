@@ -5,7 +5,7 @@ import torch
 import numpy as np
 from torch import nn
 
-from model.DQN.QNetwork import QNetwork
+from model.DQN.net.QNetwork import QNetwork
 
 
 class BaseDQN():
@@ -77,13 +77,35 @@ class BaseDQN():
         if not os.path.exists(path):
             os.makedirs(path)
 
-        info_dict = {'episode': episode}
+
+        info_dict = {
+            'episode': episode,
+            'gamma': self.gamma,
+            'batch_size': self.batch_size,
+            'epsilon_max': self.epsilon_max,
+            'epsilon_increment': self.epsilon_increment,
+            'epsilon': self.epsilon,
+            'learn_step_counter': self.learn_step_counter
+        }
+
         json.dump(info_dict, open(f'{path}/info.json', 'w'))
-        np.save(f'{path}/memory.npy', self.memory)
+        # np.save(f'{path}/memory.npy', self.memory)
         torch.save(self.q_eval.state_dict(), f'{path}/q_eval.params')
         torch.save(self.q_target.state_dict(), f'{path}/q_target.params')
 
     def load(self, path):
-        self.memory = np.load(f'{path}/memory.npy')
-        self.q_target.load_state_dict(torch.load(f'{path}/q_target.params'))
-        self.q_eval.load_state_dict(torch.load(f'{path}/q_eval.params'))
+        # self.memory = np.load(f'{path}/memory.npy')
+        self.q_target.load_state_dict(torch.load(f'{path}/q_target.params', map_location=self.device))
+        self.q_eval.load_state_dict(torch.load(f'{path}/q_eval.params', map_location=self.device))
+        info_json = json.load(open(f'{path}/info.json', 'r'))
+
+        self.epsilon = info_json['epsilon']
+        self.episode = info_json['episode']
+        self.gamma = info_json['gamma']
+        self.batch_size = info_json['batch_size']
+        self.epsilon_max = info_json['epsilon_max']
+        self.epsilon_increment = info_json['epsilon_increment']
+        self.epsilon = info_json['epsilon']
+        self.learn_step_counter = info_json['learn_step_counter']
+
+        return int(info_json['episode'])

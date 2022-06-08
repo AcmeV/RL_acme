@@ -62,3 +62,4 @@ class BaseTable():
 		''' Load model parameters '''
 		info_json = json.load(open(f'{path}/model.json', 'r'))
 		self.table = pd.read_json(info_json['table'])
+		return int(info_json['episode'])

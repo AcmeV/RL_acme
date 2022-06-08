@@ -15,7 +15,8 @@ player_moves = {
 initial_playersize = 4
 
 
-class snakeclass(object):
+class Snake(object):
+
     def __init__(self, gridsize):
         self.pos = np.array([gridsize // 2, gridsize // 2]).astype('float')  # 初始化贪吃蛇头部position坐标，位于显示区域的中心
         self.dir = np.array([1., 0.])  # 初始化贪吃蛇的运动
@@ -53,7 +54,7 @@ class snakeclass(object):
         return self.len + 1
 
 
-class appleclass(object):  # 定义苹果出现的地方
+class Apple(object):  # 定义苹果出现的地方
     def __init__(self, gridsize):
         self.pos = np.random.randint(1, gridsize, 2)
         self.score = 0
@@ -65,13 +66,15 @@ class appleclass(object):  # 定义苹果出现的地方
         self.score += 1
 
 
-class GameEnvironment(object):
+class SnakeGame(object):
 
     def __init__(self, gridsize=15, nothing=0, dead=-1, apple=1):
+
+        self.is_render = False
         self.n_actions = 5
-        self.n_features = 4
-        self.snake = snakeclass(gridsize)
-        self.apple = appleclass(gridsize)
+        self.n_features = 10
+        self.snake = Snake(gridsize)
+        self.apple = Apple(gridsize)
         self.game_over = False
         self.gridsize = gridsize
         self.reward_nothing = nothing
@@ -83,11 +86,26 @@ class GameEnvironment(object):
         self.block_size = 20
         self.windowwidth = gridsize * self.block_size * 2
         self.windowheight = gridsize * self.block_size
-        pygame.init()  # pygame 初始化
-        self.win = pygame.display.set_mode((self.windowwidth, self.windowheight))  # 设置pygame窗口
-        pygame.display.set_caption("snake")
-        self.font = pygame.font.SysFont('arial', 18)
-        self.clock = pygame.time.Clock()
+
+        self.win = None
+        self.clock = None
+        self.reward = 0
+
+        self.has_terminal_tag = True
+
+    def render(self):
+        if self.is_render:
+            if self.win is None:
+                pygame.init()  # pygame 初始化
+                self.win = pygame.display.set_mode((self.windowwidth, self.windowheight))  # 设置pygame窗口
+                pygame.display.set_caption("snake")
+                self.font = pygame.font.SysFont('arial', 18)
+            if self.clock is None:
+                self.clock = pygame.time.Clock()
+            self.clock.tick(5)
+            self.drawboard()
+        else:
+            pass
 
     def reset(self):
         self.apple.pos = np.random.randint(1, self.gridsize, 2).astype('float')  # 随机初始化苹果的位置
@@ -136,24 +154,31 @@ class GameEnvironment(object):
             reward = self.reward_apple
         len_of_snake = len(self.snake)
 
-        self.drawboard(reward)
+        self.reward = reward
 
         return list(np.hstack((self.snake.pos, self.apple.pos, self.snake.dir, np.array(self.snake.getproximity())))), \
                reward, Done, len_of_snake
 
-    def drawboard(self, reward):  # 通过pygame绘制可视化贪吃蛇运动的
+    def drawboard(self):  # 通过pygame绘制可视化贪吃蛇运动的
         self.win.fill((0, 0, 0))
-        for pos in self.snake.prevpos:  # 逐个绘制贪吃蛇的身体（贪吃蛇身体由不同的小block组成）
-            pygame.draw.rect(self.win, (0, 255, 0), (pos[0] * self.block_size, pos[1] * self.block_size, self.block_size, self.block_size))
+        for idx, pos in enumerate(self.snake.prevpos):  # 逐个绘制贪吃蛇的身体（贪吃蛇身体由不同的小block组成）
+            if idx == len(self.snake.prevpos) - 1:
+                rgb = (0, 201, 87)
+            else:
+                rgb = (189, 252, 201)
+
+            pygame.draw.rect(self.win, rgb, (pos[0] * self.block_size, pos[1] * self.block_size, self.block_size, self.block_size))
         pygame.draw.rect(self.win, (255, 0, 0),
                          (self.apple.pos[0] * self.block_size, self.apple.pos[1] * self.block_size, self.block_size, self.block_size))  # 绘制苹果
         lensnaketext = self.font.render('          LEN OF SNAKE: ' + str(len(self.snake)), False, (255, 255, 255))
-        rewardtext = self.font.render('          REWARD: ' + str(int(reward)), False, (255, 255, 255))
+        rewardtext = self.font.render('          REWARD: ' + str(int(self.reward)), False, (255, 255, 255))
 
 
         self.win.blit(lensnaketext, (self.windowwidth // 2, 40))
         self.win.blit(rewardtext, (self.windowwidth // 2, 80))
         pygame.display.update()  # 更新显示
 
-    def destroy(self):
-        pygame.quit()
+    def close(self):
+        if self.win is not None:
+            pygame.display.quit()
+            pygame.quit()

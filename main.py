@@ -1,7 +1,6 @@
 import argparse
 
 from utils.training.gym_train import gym_train
-from utils.training.pygame_train import pygame_train
 from utils.training.tkinter_train import tkinter_train
 
 parser = argparse.ArgumentParser()
@@ -19,14 +18,14 @@ parser.add_argument('--env-type', type=str, default='gym',
 
 parser.add_argument('--env-name', type=str, default='MountainCar',
                     choices=('Maze', 'Maze_v0',
-                             'FlappyBird', 'Snake'
+                             'FlappyBird', 'Snake',
                              'Pendulum', 'MountainCar', 'CartPole'))
 parser.add_argument('--is-render', type=int, default=0, choices=(0, 1))
 
 # Hyper-parameters
 parser.add_argument('--model', type=str, default='QLearning',
                     choices=('QLearning', 'Sarsa', 'SarsaLambda',
-                             'DQN', 'DoubleDQN'))
+                             'DQN', 'DoubleDQN', 'PrioritizedReplayDQN', 'DuelingDQN'))
 parser.add_argument('--episodes', type=int, default=150)
 parser.add_argument('--lr', type=float, default=0.1)
 parser.add_argument('--pre-training', type=int, default=1, choices=(0, 1))
@@ -37,7 +36,5 @@ if __name__ == '__main__':
 
     if args.env_type == 'tkinter':
         tkinter_train(args)
-    elif args.env_type == 'pygame':
-        pygame_train(args)
     else:
         gym_train(args)

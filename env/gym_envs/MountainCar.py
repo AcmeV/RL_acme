@@ -34,3 +34,6 @@ class MountainCar():
             reward = 100
 
         return observation_, reward, done, info
+
+    def close(self):
+        self.env.close()

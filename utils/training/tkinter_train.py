@@ -4,20 +4,20 @@ import os
 import numpy as np
 import torch
 
-from model.DQN import DQN, DoubleDQN
+from model.DQN import DQN, DoubleDQN, DuelingDQN, PrioritizedReplayDQN
 from utils import initial_env
 from model import SarsaLambdaTable
 from model.epsilon_greedy.SarsaTable import SarsaTable
 from model.epsilon_greedy.QLearningTable import QLearningTable
 
 
-def qlearning_training(env, q_table, episodes, save_path, log_path):
+def qlearning_training(env, q_table, start_episode, episodes, save_path, log_path):
 
     file = open(log_path, 'w', newline='')
     writer = csv.writer(file)
     writer.writerow(['Episode', 'Loss', 'Info', 'Step'])
 
-    for episode in range(episodes):
+    for episode in range(start_episode, start_episode + episodes):
 
         observation = env.reset()
 
@@ -51,13 +51,13 @@ def qlearning_training(env, q_table, episodes, save_path, log_path):
     file.close()
     env.destroy()
 
-def sarsa_training(env, sarsa_table, episodes, save_path, log_path):
+def sarsa_training(env, sarsa_table, start_episode, episodes, save_path, log_path):
 
     file = open(log_path, 'w', newline='')
     writer = csv.writer(file)
     writer.writerow(['Episode', 'Loss', 'Info', 'Step'])
 
-    for episode in range(episodes):
+    for episode in range(start_episode, start_episode + episodes):
 
         observation = env.reset()
 
@@ -93,7 +93,7 @@ def sarsa_training(env, sarsa_table, episodes, save_path, log_path):
     file.close()
     env.destroy()
 
-def dqn_training(env, model, episodes, save_path, log_path):
+def dqn_training(env, model, start_episode, episodes, save_path, log_path):
 
     file = open(log_path, 'w', newline='')
     writer = csv.writer(file)
@@ -101,7 +101,7 @@ def dqn_training(env, model, episodes, save_path, log_path):
 
     total_counter = 0
 
-    for episode in range(episodes):
+    for episode in range(start_episode, start_episode + episodes):
 
         observation = env.reset()
 
@@ -147,6 +147,8 @@ def dqn_training(env, model, episodes, save_path, log_path):
 
 def tkinter_train(args):
 
+    print(f'\nModel: {args.model} | Env: {args.env_type}-{args.env_name} | LR: {args.lr} | device: {args.device}\n')
+
     env = initial_env(args)
     if args.is_render == 1:
         env.is_render = True
@@ -154,7 +156,7 @@ def tkinter_train(args):
     save_path = f'{args.model_save_dir}/{args.model}-{args.env_type}-{args.env_name}'
     load_path = f'{args.model_save_dir}/{args.model}-{args.env_type}-{args.env_name}'
 
-    log_path = f'{args.log_dir}/{args.model}-{args.env_type}-{args.env_name}.csv'
+    log_path = f'{args.log_dir}/{args.model}-{args.env_type}-{args.env_name}-lr_{args.lr}.csv'
 
     if args.if_save == 0:
         save_path = None
@@ -165,32 +167,35 @@ def tkinter_train(args):
             actions=list(range(env.n_actions)),
             learning_rate=args.lr)
         # load pre-training model parameters
+        start_episode = 0
         if os.path.exists(load_path) and args.pre_training == 1:
-            q_table.load(load_path)
+            start_episode = q_table.load(load_path)
 
         env.after(100, qlearning_training, env, q_table,
-                  args.episodes, save_path, log_path)
+                  start_episode, args.episodes, save_path, log_path)
     elif args.model == 'Sarsa':
 
         sarsa_table = SarsaTable(
             actions=list(range(env.n_actions)),
             learning_rate=args.lr)
         # load pre-training model parameters
+        start_episode = 0
         if os.path.exists(load_path) and args.pre_training == 1:
-            sarsa_table.load(load_path)
+            start_episode = sarsa_table.load(load_path)
 
         env.after(100, sarsa_training, env, sarsa_table,
-                  args.episodes, save_path, log_path)
+                  start_episode, args.episodes, save_path, log_path)
     elif args.model == 'SarsaLambda':
         sarsa_table = SarsaLambdaTable(
             actions=list(range(env.n_actions)),
             learning_rate=args.lr)
         # load pre-training model parameters
+        start_episode = 0
         if os.path.exists(load_path) and args.pre_training == 1:
-            sarsa_table.load(load_path)
+            start_episode = sarsa_table.load(load_path)
 
         env.after(100, sarsa_training, env, sarsa_table,
-                  args.episodes, save_path, log_path)
+                  start_episode, args.episodes, save_path, log_path)
     elif 'DQN' in args.model:
         device = torch.device(f'cuda:0' if args.device != 'cpu'
                                            and torch.cuda.is_available() else "cpu")
@@ -204,17 +209,23 @@ def tkinter_train(args):
                         learning_rate=args.lr,
                         reward_decay=0.9, e_greedy=0.9,
                         replace_target_iter=200, memory_size=2000, device=device)
+        elif args.model == 'DuelingDQN':
+            model = DuelingDQN(env.n_actions, env.n_features,
+                               learning_rate=args.lr, reward_decay=0.9,
+                               e_greedy=0.9, e_greedy_increment=0.00005,
+                               replace_target_iter=100, memory_size=2000, device=device)
         else:
-            model = DQN(env.n_actions, env.n_features,
-                        learning_rate=args.lr,
-                        reward_decay=0.9, e_greedy=0.9,
-                        replace_target_iter=200, memory_size=2000, device=device)
+            model = PrioritizedReplayDQN(env.n_actions, env.n_features,
+                                         learning_rate=args.lr, reward_decay=0.9,
+                                         e_greedy=0.9, e_greedy_increment=0.00005,
+                                         replace_target_iter=200, memory_size=2000, device=device)
         # load pre-training model parameters
+        start_episode = 0
         if os.path.exists(load_path) and args.pre_training == 1:
-            model.load(load_path)
+            start_episode = model.load(load_path)
 
         env.after(100, dqn_training, env, model,
-                  args.episodes, save_path, log_path)
+                  start_episode, args.episodes, save_path, log_path)
 
 
     env.mainloop()

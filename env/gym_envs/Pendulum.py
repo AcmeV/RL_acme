@@ -34,3 +34,6 @@ class Pendulum():
         reward /= 10
 
         return observation_, reward, done, info
+
+    def close(self):
+        self.env.close()

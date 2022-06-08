@@ -1,11 +1,11 @@
 {
   "tkinter": {
-    "Maze_v0": "env.Maze_v0",
-    "Maze": "env.Maze"
+    "Maze_v0": "env.tkinter_envs.Maze_v0",
+    "Maze": "env.tkinter_envs.Maze"
   },
   "pygame": {
     "FlappyBird": "env.flappy_bird.FlappyBird",
-    "Snake": "env.snake.game.GameEnvironment"
+    "Snake": "env.pygame_envs.snake.SnakeGame"
   },
 
   "gym": {

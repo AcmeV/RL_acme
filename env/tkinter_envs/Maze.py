@@ -162,7 +162,7 @@ class Maze(tk.Tk, object):
                     self.canvas.coords(self.hell7),
                     self.canvas.coords(self.hell8), self.canvas.coords(self.hell9)]:
             reward = -1
-            done = False
+            done = True
         elif s_ == s:
             reward = -1
             done = False
