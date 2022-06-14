@@ -5,7 +5,7 @@ import torch
 import numpy as np
 from torch import nn
 
-from model.DQN.net.QNetwork import QNetwork
+from model.dqn.net import QNetwork
 
 
 class BaseDQN():

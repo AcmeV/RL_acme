@@ -35,17 +35,17 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
 
-    args.env_type = 'pygame'
-    args.env_name = 'Snake'
-    args.model = 'DQN'
+    args.env_type = 'gym'
+    args.env_name = 'CartPole'
+    args.model = 'ActorCritic'
 
     args.pre_training = 1
     args.if_save = 1
 
-    args.is_render = 1
+    args.is_render = 0
 
-    args.episodes = 1000
-    args.lr = 0.0001
+    args.episodes = 10000
+    args.lr = 0.01
 
     if args.env_type == 'tkinter':
         tkinter_train(args)

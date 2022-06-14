@@ -4,7 +4,7 @@ import os
 import numpy as np
 import torch
 
-from model.DQN import DQN, DoubleDQN, DuelingDQN, PrioritizedReplayDQN
+from model.dqn import DQN, DoubleDQN, DuelingDQN, PrioritizedReplayDQN
 from utils import initial_env
 from model import SarsaLambdaTable
 from model.epsilon_greedy.SarsaTable import SarsaTable

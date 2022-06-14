@@ -1,4 +1,4 @@
-from model.DQN.net.QNetwork import *
+from .net import *
 
 from .BaseDQN import *
 from .DQN import *

@@ -14,6 +14,8 @@ class Pendulum():
 
         self.is_render = False
 
+        self.discrete = True
+
         self.n_features = self.env.observation_space.shape[0]
 
     def reset(self):
@@ -26,6 +28,7 @@ class Pendulum():
             pass
 
     def step(self, action):
+
         f_action = (action - (self.n_actions - 1) / 2) / ((self.n_actions - 1) / 4)
 
         observation_, reward, done, info = self.env.step(np.array([f_action]))

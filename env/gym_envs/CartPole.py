@@ -8,6 +8,8 @@ class CartPole():
 
         self.env = gym.make("CartPole-v0").unwrapped
 
+        self.discrete = True
+
         self.n_actions = 2
 
         self.has_terminal_tag = True
@@ -34,6 +36,8 @@ class CartPole():
         r2 = (self.env.theta_threshold_radians - abs(theta)) / self.env.theta_threshold_radians - 0.5
 
         reward = r1 + r2
+        if done:
+            reward = -20
         return observation_, reward, done, info
 
     def close(self):

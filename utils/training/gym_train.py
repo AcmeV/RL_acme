@@ -1,13 +1,16 @@
 import csv
 import os
 
-import numpy as np
 import torch
+import numpy as np
 
-from model import QLearningTable, SarsaTable, SarsaLambdaTable
-from model.DQN import DQN, PrioritizedReplayDQN, DuelingDQN
+from model.actor_critic import ActorCriticDiscrete
+from model.actor_critic.ActorCriticContinue import ActorCriticContinue
+from model.policy_gradient.PolicyGradientContinue import PolicyGradientContinue
 from utils import initial_env
-from model.DQN import DoubleDQN
+from model import QLearningTable, SarsaTable, SarsaLambdaTable
+from model.dqn import DQN, DoubleDQN, PrioritizedReplayDQN, DuelingDQN
+from model.policy_gradient.PolicyGradientDiscrete import PolicyGradientDiscrete
 
 
 def qlearning_training(env, q_table, start_episode, episodes, save_path, log_path):
@@ -185,6 +188,110 @@ def dqn_training(env, model, start_episode, episodes, save_path, log_path):
     file.close()
     env.close()
 
+def policy_grad_training(env, model, start_episode, episodes, save_path, log_path):
+
+    file = open(log_path, 'w', newline='')
+
+    writer = csv.writer(file)
+
+    writer.writerow(['Episode', 'Loss', 'Reward', 'Step'])
+
+    observation = env.reset()
+
+    for episode in range(start_episode, start_episode + episodes):
+
+        if env.has_terminal_tag:
+            observation = env.reset()
+
+        terminate = False
+        step_counter = 0
+
+        episode_rewards = []
+
+        while not terminate:
+
+            env.render()
+
+            action = model.choose_action(observation)
+
+            observation_, reward, terminate, info = env.step(action)
+
+            model.store_transition(observation, action, reward)
+
+            episode_rewards.append(reward)
+
+            # for no terminal tag environment, denote an episode as 2000
+            if not env.has_terminal_tag and step_counter >= 2000:
+                terminate = True
+
+            observation = observation_
+            step_counter += 1
+
+        episode_loss = model.learn()
+        episode_reward = np.mean(episode_rewards)
+
+        writer.writerow([episode, episode_loss, episode_reward, step_counter])
+        file.flush()
+        print(f'Episode: {episode} | Loss: {episode_loss: .4f}| Reward: {episode_reward: .4f} | Step: {step_counter}')
+
+    if save_path is not None:
+        model.save(start_episode + episodes, save_path)
+
+    file.close()
+    env.close()
+
+def ac_training(env, model, start_episode, episodes, save_path, log_path):
+
+    file = open(log_path, 'w', newline='')
+
+    writer = csv.writer(file)
+
+    writer.writerow(['Episode', 'Loss', 'Reward', 'Step'])
+
+    observation = env.reset()
+
+    for episode in range(start_episode, start_episode + episodes):
+
+        if env.has_terminal_tag:
+            observation = env.reset()
+
+        terminate = False
+        step_counter = 0
+
+        episode_losses, episode_rewards = [], []
+
+        while not terminate:
+
+            env.render()
+
+            action = model.choose_action(observation)
+
+            observation_, reward, terminate, info = env.step(action)
+
+            episode_rewards.append(reward)
+
+            episode_losses.append(model.learn(observation, reward, action, observation_))
+
+            # for no terminal tag environment, denote an episode as 2000
+            if not env.has_terminal_tag and step_counter >= 2000:
+                terminate = True
+
+            observation = observation_
+            step_counter += 1
+
+        episode_loss = np.mean(episode_losses)
+        episode_reward = np.mean(episode_rewards)
+
+        writer.writerow([episode, episode_loss, episode_reward, step_counter])
+        file.flush()
+        print(f'Episode: {episode} | Loss: {episode_loss: .4f}| Reward: {episode_reward: .4f} | Step: {step_counter}')
+
+    if save_path is not None:
+        model.save(start_episode + episodes, save_path)
+
+    file.close()
+    env.close()
+
 def gym_train(args):
 
     print(f'\nModel: {args.model} | Env: {args.env_type}-{args.env_name} | LR: {args.lr} | device: {args.device}\n')
@@ -259,5 +366,40 @@ def gym_train(args):
         if os.path.exists(load_path) and args.pre_training == 1:
             start_episode = model.load(load_path)
         dqn_training(env, model, start_episode, args.episodes, save_path, log_path)
+
+    elif args.model == 'PolicyGradient':
+
+        if env.discrete:
+
+            model = PolicyGradientDiscrete(env.n_actions, env.n_features, learning_rate=args.lr)
+            start_episode = 0
+            if os.path.exists(load_path) and args.pre_training == 1:
+                start_episode = model.load(load_path)
+
+            policy_grad_training(env, model, start_episode, args.episodes, save_path, log_path)
+        else:
+            model = PolicyGradientContinue(env.action_bound, env.n_features, learning_rate=args.lr)
+            start_episode = 0
+            if os.path.exists(load_path) and args.pre_training == 1:
+                start_episode = model.load(load_path)
+
+            policy_grad_training(env, model, start_episode, args.episodes, save_path, log_path)
+
+    elif args.model == 'ActorCritic':
+        if env.discrete:
+
+            model = ActorCriticDiscrete(env.n_actions, env.n_features, learning_rate=args.lr)
+            start_episode = 0
+            if os.path.exists(load_path) and args.pre_training == 1:
+                start_episode = model.load(load_path)
+
+            ac_training(env, model, start_episode, args.episodes, save_path, log_path)
+        else:
+            model = ActorCriticContinue(env.action_bound, env.n_features, learning_rate=args.lr)
+            start_episode = 0
+            if os.path.exists(load_path) and args.pre_training == 1:
+                start_episode = model.load(load_path)
+
+            ac_training(env, model, start_episode, args.episodes, save_path, log_path)
 
     print('training end')

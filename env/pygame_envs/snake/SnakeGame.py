@@ -93,6 +93,8 @@ class SnakeGame(object):
 
         self.has_terminal_tag = True
 
+        self.discrete = True
+
     def render(self):
         if self.is_render:
             if self.win is None:

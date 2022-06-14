@@ -1,19 +1,27 @@
 import torch
 import numpy as np
+from torch import nn
 
-from model.DQN.BaseDQN import BaseDQN
+from model.dqn.BaseDQN import BaseDQN
+from model.dqn.net import QDuelingNetwork
 
 
-class DoubleDQN(BaseDQN):
+class DuelingDQN(BaseDQN):
     def __init__(self, n_actions, n_features, n_hidden=20,
                  learning_rate=0.01, reward_decay=0.9, e_greedy=0.9,
                  replace_target_iter=200, memory_size=500, batch_size=32,
                  e_greedy_increment=None, device='cpu'):
 
-        super(DoubleDQN, self).__init__(
+        super(DuelingDQN, self).__init__(
             n_actions, n_features, n_hidden, learning_rate,
             reward_decay, e_greedy, replace_target_iter,
             memory_size, batch_size, e_greedy_increment, device)
+
+    def _build_net(self):
+        self.q_eval = QDuelingNetwork(self.n_features, self.n_hidden, self.n_actions).to(self.device)
+        self.q_target = QDuelingNetwork(self.n_features, self.n_hidden, self.n_actions).to(self.device)
+        self.optimizer = torch.optim.Adam(self.q_eval.parameters(), lr=self.lr)
+        self.loss_func = nn.MSELoss().to(self.device)
 
     def learn(self):
         # check to replace target parameters
@@ -27,10 +35,9 @@ class DoubleDQN(BaseDQN):
             sample_index = np.random.choice(self.memory_counter, size=self.batch_size)
         batch_memory = self.memory[sample_index, :]
 
-        q_next, q_eval4next = self.q_target(torch.Tensor(batch_memory[:, -self.n_features:]).to(self.device)), \
-                         self.q_eval(torch.Tensor(batch_memory[:, -self.n_features:]).to(self.device))
-
-        q_eval = self.q_eval(torch.Tensor(batch_memory[:, :self.n_features]).to(self.device))
+        # q_next is used for getting which action would be choosed by target network in state s_(t+1)
+        q_next, q_eval = self.q_target(torch.Tensor(batch_memory[:, -self.n_features:]).to(self.device)), \
+                         self.q_eval(torch.Tensor(batch_memory[:, :self.n_features]).to(self.device))
         # used for calculating y, we need to copy for q_eval because this operation could keep the Q_value that has not been selected unchanged,
         # so when we do q_target - q_eval, these Q_value become zero and wouldn't affect the calculation of the loss
         q_target = torch.Tensor(q_eval.cpu().data.numpy().copy()).to(self.device)
@@ -41,9 +48,7 @@ class DoubleDQN(BaseDQN):
 
         # torch.max(data, dim)[0]: max_value in each dimension
         # torch.max(data, dim)[1]: max_value's index in each dimension
-        max_act4next = torch.max(q_eval4next, dim=1)[1]
-        selected_q_next = q_next[batch_index, max_act4next]
-        q_target[batch_index, eval_act_index] = reward + self.gamma * selected_q_next
+        q_target[batch_index, eval_act_index] = reward + self.gamma * torch.max(q_next, 1)[0]
 
         loss = self.loss_func(q_target, q_eval)
         self.optimizer.zero_grad()
@@ -55,4 +60,5 @@ class DoubleDQN(BaseDQN):
             if self.epsilon < self.epsilon_max \
             else self.epsilon_max
         self.learn_step_counter += 1
+
         return loss.item()

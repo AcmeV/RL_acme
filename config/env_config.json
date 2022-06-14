@@ -10,6 +10,7 @@
 
   "gym": {
     "Pendulum": "env.gym_envs.Pendulum",
+    "PendulumContinue": "env.gym_envs.PendulumContinue",
     "MountainCar": "env.gym_envs.MountainCar",
     "CartPole": "env.gym_envs.CartPole"
   }

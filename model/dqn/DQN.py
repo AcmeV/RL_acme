@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from model.DQN.BaseDQN import BaseDQN
+from model.dqn.BaseDQN import BaseDQN
 
 
 class DQN(BaseDQN):

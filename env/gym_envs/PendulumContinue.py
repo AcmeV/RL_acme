@@ -1,26 +1,25 @@
 import gym
-import gym.envs.classic_control.mountain_car
 import numpy as np
 
 
-class MountainCar():
+class PendulumContinue():
 
     def __init__(self):
 
-        self.env = gym.make("MountainCar-v0").unwrapped
+        self.env = gym.make("Pendulum-v1").unwrapped
 
-        self.discrete = True
+        self.action_bound = [-2.0, 2.0]
 
-        self.n_actions = 3
-
-        self.has_terminal_tag = True
+        self.has_terminal_tag = False
 
         self.is_render = False
+
+        self.discrete = False
 
         self.n_features = self.env.observation_space.shape[0]
 
     def reset(self):
-        return self.env.reset(seed=21)
+        return self.env.reset(seed=1)
 
     def render(self):
         if self.is_render:
@@ -30,10 +29,10 @@ class MountainCar():
 
     def step(self, action):
 
-        observation_, reward, done, info = self.env.step(action)
+        observation_, reward, done, info = self.env.step(np.array([action]))
 
-        if done:
-            reward = 100
+        # normalize to a range of (-1,0). r = 0 when get upright
+        reward /= 10
 
         return observation_, reward, done, info
 
