@@ -1,14 +1,12 @@
 import gym
-import numpy as np
 
-
-class PendulumContinue():
+class HalfCheetah():
 
     def __init__(self):
 
-        self.env = gym.make("Pendulum-v1").unwrapped
+        self.env = gym.make("HalfCheetah-v2").unwrapped
 
-        self.action_bound = [-2.0, 2.0]
+        self.action_bound = [-1.0, 1.0]
 
         self.has_terminal_tag = False
 

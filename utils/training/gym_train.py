@@ -6,6 +6,7 @@ import numpy as np
 
 from model.actor_critic import ActorCriticDiscrete
 from model.actor_critic.ActorCriticContinue import ActorCriticContinue
+from model.ddpg.DDPG import DDPG
 from model.policy_gradient.PolicyGradientContinue import PolicyGradientContinue
 from utils import initial_env
 from model import QLearningTable, SarsaTable, SarsaLambdaTable
@@ -145,6 +146,9 @@ def dqn_training(env, model, start_episode, episodes, save_path, log_path):
         episode_rewards = []
 
         while not terminate:
+
+            if episode > 10:
+                env.is_render = 1
 
             env.render()
 
@@ -303,7 +307,10 @@ def gym_train(args):
     save_path = f'{args.model_save_dir}/{args.model}-{args.env_type}-{args.env_name}'
     load_path = f'{args.model_save_dir}/{args.model}-{args.env_type}-{args.env_name}'
 
-    log_path = f'{args.log_dir}/{args.model}-{args.env_type}-{args.env_name}-lr_{args.lr}-10000.csv'
+    log_path = f'{args.log_dir}/{args.model}-{args.env_type}-{args.env_name}-lr_{args.lr}.csv'
+
+    device = torch.device(f'cuda:2' if args.device != 'cpu'
+                                       and torch.cuda.is_available() else "cpu")
 
     if args.if_save == 0:
         save_path = None
@@ -318,7 +325,6 @@ def gym_train(args):
             start_episode = q_table.load(load_path)
 
         qlearning_training(env, q_table, start_episode, args.episodes, save_path, log_path)
-
     elif 'Sarsa' in args.model:
 
         if args.model == 'Sarsa':
@@ -337,13 +343,12 @@ def gym_train(args):
 
         sarsa_training(env, sarsa_table, start_episode, args.episodes, save_path, log_path)
     elif 'DQN' in args.model:
-        device = torch.device(f'cuda:2' if args.device != 'cpu'
-                                           and torch.cuda.is_available() else "cpu")
+
         if args.model == 'DQN':
             model = DQN(env.n_actions, env.n_features,
                         learning_rate=args.lr, reward_decay=0.9,
                         e_greedy=0.9, e_greedy_increment=0.00005,
-                        replace_target_iter=200, memory_size=10000, device=device)
+                        replace_target_iter=200, memory_size=500, device=device)
         elif args.model == 'DoubleDQN':
 
             model = DoubleDQN(env.n_actions, env.n_features,
@@ -366,7 +371,6 @@ def gym_train(args):
         if os.path.exists(load_path) and args.pre_training == 1:
             start_episode = model.load(load_path)
         dqn_training(env, model, start_episode, args.episodes, save_path, log_path)
-
     elif args.model == 'PolicyGradient':
 
         if env.discrete:
@@ -384,22 +388,29 @@ def gym_train(args):
                 start_episode = model.load(load_path)
 
             policy_grad_training(env, model, start_episode, args.episodes, save_path, log_path)
-
     elif args.model == 'ActorCritic':
         if env.discrete:
 
-            model = ActorCriticDiscrete(env.n_actions, env.n_features, learning_rate=args.lr)
+            model = ActorCriticDiscrete(env.n_actions, env.n_features, learning_rate=args.lr, device=device)
             start_episode = 0
             if os.path.exists(load_path) and args.pre_training == 1:
                 start_episode = model.load(load_path)
 
             ac_training(env, model, start_episode, args.episodes, save_path, log_path)
         else:
-            model = ActorCriticContinue(env.action_bound, env.n_features, learning_rate=args.lr)
+            model = ActorCriticContinue(env.action_bound, env.n_features, learning_rate=args.lr, device=device)
             start_episode = 0
             if os.path.exists(load_path) and args.pre_training == 1:
                 start_episode = model.load(load_path)
 
             ac_training(env, model, start_episode, args.episodes, save_path, log_path)
+    elif args.model == 'DDPG':
+        model = DDPG(env.action_bound, env.n_actions, env.n_features,
+                     learning_rate=args.lr, device=device)
+        start_episode = 0
+        if os.path.exists(load_path) and args.pre_training == 1:
+            start_episode = model.load(load_path)
+
+        dqn_training(env, model, start_episode, args.episodes, save_path, log_path)
 
     print('training end')

@@ -26,9 +26,9 @@ class PolicyGradientDiscrete:
         self._build_net()
 
     def _build_net(self):
-        self.net = DiscreteNetwork(self.n_features, self.n_hidden, self.n_actions)
+        self.net = DiscreteNetwork(self.n_features, self.n_hidden, self.n_actions).to(self.device)
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.lr)
-        self.criterion = nn.CrossEntropyLoss(reduce=False)
+        self.criterion = nn.CrossEntropyLoss(reduce=False).to(self.device)
 
     def choose_action(self, observation):
 

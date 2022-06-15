@@ -1,5 +1,5 @@
 import gym
-import gym.envs.classic_control.cartpole
+import gym.envs.classic_control.pendulum
 
 
 class CartPole():

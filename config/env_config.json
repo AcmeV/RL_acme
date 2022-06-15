@@ -12,7 +12,8 @@
     "Pendulum": "env.gym_envs.Pendulum",
     "PendulumContinue": "env.gym_envs.PendulumContinue",
     "MountainCar": "env.gym_envs.MountainCar",
-    "CartPole": "env.gym_envs.CartPole"
+    "CartPole": "env.gym_envs.CartPole",
+    "HalfCheetah": "env.gym_envs.HalfCheetah"
   }
 
 }

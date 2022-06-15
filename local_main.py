@@ -26,7 +26,8 @@ parser.add_argument('--is-render', type=int, default=1, choices=(0, 1))
 # Hyper-parameters
 parser.add_argument('--model', type=str, default='QLearning',
                     choices=('QLearning', 'Sarsa', 'SarsaLambda',
-                             'DQN', 'DoubleDQN', 'PrioritizedReplayDQN', 'DuelingDQN'))
+                             'DQN', 'DoubleDQN', 'PrioritizedReplayDQN', 'DuelingDQN',
+                             'PolicyGradient', 'ActorCritic'))
 parser.add_argument('--episodes', type=int, default=150)
 parser.add_argument('--lr', type=float, default=0.1)
 parser.add_argument('--pre-training', type=int, default=1, choices=(0, 1))
@@ -36,16 +37,16 @@ args = parser.parse_args()
 if __name__ == '__main__':
 
     args.env_type = 'gym'
-    args.env_name = 'CartPole'
-    args.model = 'ActorCritic'
+    args.env_name = 'PendulumContinue'
+    args.model = 'DDPG'
 
     args.pre_training = 1
     args.if_save = 1
 
     args.is_render = 0
 
-    args.episodes = 10000
-    args.lr = 0.01
+    args.episodes = 100
+    args.lr = 0.001
 
     if args.env_type == 'tkinter':
         tkinter_train(args)

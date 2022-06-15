@@ -26,9 +26,9 @@ class PolicyGradientContinue:
         self._build_net()
 
     def _build_net(self):
-        self.net = ContinueNetwork(self.n_features, self.n_hidden)
+        self.net = ContinueNetwork(self.n_features, self.n_hidden).to(self.device)
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.lr)
-        self.criterion = nn.CrossEntropyLoss(reduce=False)
+        self.criterion = nn.CrossEntropyLoss(reduce=False).to(self.device)
 
     def choose_action(self, observation):
         observation = np.array(observation)[np.newaxis, :]
@@ -37,7 +37,7 @@ class PolicyGradientContinue:
         return self.action
 
     def normal_dist(self, s):
-        s = torch.Tensor(s[np.newaxis, :])
+        s = torch.Tensor(s[np.newaxis, :]).to(self.device)
         mu, sigma = self.net(s)
         mu, sigma = (mu * 2).squeeze(), (sigma + 0.1).squeeze()
         normal_dist = torch.distributions.Normal(mu, sigma)  # get the normal distribution of average=mu and std=sigma
